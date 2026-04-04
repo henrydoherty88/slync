@@ -1,0 +1,1208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Slync">
+  <meta name="theme-color" content="#0b1120">
+  <title>Slync</title>
+  <style>
+    /* 1. CSS variables (:root) */
+    :root {
+      --bg-deep: #0b1120;
+      --bg-card: #141c2e;
+      --bg-card-border: rgba(255,255,255,0.07);
+      --accent: #7c8cf5;
+      --accent-glow: rgba(124,140,245,0.25);
+      --good: #4ade80;
+      --warn: #facc15;
+      --danger: #f87171;
+      --text-primary: #eef0f6;
+      --text-muted: #8891a5;
+      --wake-accent: #34d399;
+    }
+
+    /* 2. Reset + global */
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body {
+      margin: 0;
+      background: var(--bg-deep);
+      color: var(--text-primary);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      font-size: 15px;
+      overscroll-behavior: none;
+      -webkit-font-smoothing: antialiased;
+    }
+    input, button { touch-action: manipulation; font-family: inherit; }
+    button { cursor: pointer; }
+
+    /* 3. Layout */
+    #app {
+      max-width: 430px;
+      margin: 0 auto;
+      min-height: 100vh;
+      position: relative;
+    }
+    .tab-content {
+      display: none;
+      flex-direction: column;
+      padding: 16px;
+      padding-top: calc(env(safe-area-inset-top, 0px) + 16px);
+      padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+      min-height: 100vh;
+    }
+    .tab-content.active { display: flex; }
+
+    /* 4. Tab bar */
+    #tab-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      height: calc(60px + env(safe-area-inset-bottom, 0px));
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+      background: rgba(11, 17, 32, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-top: 1px solid var(--bg-card-border);
+      border-radius: 0;
+      z-index: 100;
+    }
+    .tab-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      padding: 8px 16px;
+      min-width: 44px;
+      min-height: 44px;
+      transition: color 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .tab-btn.active { color: var(--accent); }
+    .tab-btn svg { width: 22px; height: 22px; }
+    .tab-btn span { font-size: 11px; font-weight: 500; }
+
+    /* 5. Track tab */
+    .app-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      margin-bottom: 12px;
+    }
+    .app-title { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; }
+    .gear-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      padding: 8px;
+      min-width: 44px;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .gear-btn svg { width: 22px; height: 22px; }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--bg-card-border);
+      border-radius: 14px;
+      padding: 16px;
+      width: 100%;
+    }
+    .card-heading {
+      font-size: 14px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin: 0 0 12px 0;
+    }
+    .snapshot-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .snapshot-item { flex: 1; }
+    .snapshot-label { font-size: 12px; font-weight: 500; color: var(--text-muted); margin-bottom: 4px; }
+    .snapshot-value { font-size: 24px; font-weight: 700; }
+
+    .session-info { text-align: center; }
+    .session-info .fell-asleep { font-size: 14px; color: var(--text-muted); margin-bottom: 4px; }
+    .session-info .elapsed { font-size: 24px; font-weight: 700; }
+
+    .hero-wrap { display: flex; justify-content: center; padding: 24px 0; }
+    .hero-btn {
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      border: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      background: var(--accent);
+      color: #fff;
+      transition: background 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      animation: pulse-glow 3s ease-in-out infinite;
+    }
+    .hero-btn svg { width: 36px; height: 36px; }
+    .hero-btn .btn-label { font-size: 14px; font-weight: 600; }
+    .hero-btn.wake {
+      background: var(--wake-accent);
+      animation: pulse-glow-wake 3s ease-in-out infinite;
+    }
+
+    .live-clock { text-align: center; color: var(--text-muted); font-size: 15px; margin-bottom: 4px; }
+    .manual-link {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 14px;
+      padding: 12px;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .tips-card .tip-item { font-size: 14px; padding: 5px 0; line-height: 1.45; }
+
+    /* 6. Log tab */
+    .page-title { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 16px; }
+    .stats-row { display: flex; gap: 12px; margin-bottom: 16px; }
+    .stat-card {
+      flex: 1;
+      background: var(--bg-card);
+      border: 1px solid var(--bg-card-border);
+      border-radius: 14px;
+      padding: 14px;
+      text-align: center;
+    }
+    .stat-label { font-size: 12px; font-weight: 500; color: var(--text-muted); margin-bottom: 4px; }
+    .stat-value { font-size: 20px; font-weight: 700; }
+
+    .entry-card {
+      background: var(--bg-card);
+      border: 1px solid var(--bg-card-border);
+      border-radius: 14px;
+      padding: 14px 16px;
+      margin-bottom: 10px;
+    }
+    .entry-normal { display: flex; justify-content: space-between; align-items: center; }
+    .entry-date { font-weight: 600; font-size: 15px; }
+    .entry-times { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+    .entry-manual-badge { font-size: 11px; color: var(--text-muted); margin-left: 6px; }
+    .entry-right { display: flex; align-items: center; gap: 10px; }
+    .entry-stats { text-align: right; }
+    .entry-duration { font-size: 18px; font-weight: 700; }
+    .debt-pill {
+      font-size: 12px; font-weight: 500;
+      padding: 2px 8px;
+      border-radius: 100px;
+      display: inline-block;
+      margin-top: 2px;
+    }
+    .debt-good { background: rgba(74,222,128,0.15); color: var(--good); }
+    .debt-warn { background: rgba(250,204,21,0.15); color: var(--warn); }
+    .debt-danger { background: rgba(248,113,113,0.15); color: var(--danger); }
+    .del-btn {
+      background: none; border: none; color: var(--text-muted); padding: 8px;
+      min-width: 44px; min-height: 44px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .del-btn svg { width: 16px; height: 16px; }
+
+    .entry-confirm {
+      display: flex; align-items: center; justify-content: center; gap: 12px; padding: 8px 0;
+    }
+    .entry-confirm span { font-size: 14px; color: var(--text-muted); }
+    .cbtn-del {
+      background: none; border: 1px solid var(--danger); color: var(--danger);
+      padding: 8px 16px; border-radius: 10px; font-size: 14px; font-weight: 500; min-height: 44px;
+    }
+    .cbtn-keep {
+      background: none; border: 1px solid var(--bg-card-border); color: var(--text-primary);
+      padding: 8px 16px; border-radius: 10px; font-size: 14px; font-weight: 500; min-height: 44px;
+    }
+
+    .empty-state {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; padding: 60px 20px; text-align: center; gap: 12px;
+    }
+    .empty-moon {
+      width: 48px; height: 48px; border-radius: 50%;
+      border: 3px solid var(--text-muted); position: relative; opacity: 0.5;
+    }
+    .empty-moon::after {
+      content: ''; position: absolute; width: 38px; height: 38px;
+      border-radius: 50%; background: var(--bg-deep); top: -5px; right: -8px;
+    }
+    .empty-text { color: var(--text-muted); font-size: 15px; }
+    .empty-sub { color: var(--text-muted); font-size: 13px; }
+
+    /* 7. Trends tab */
+    .time-toggle { display: flex; gap: 8px; margin-bottom: 20px; }
+    .tog-btn {
+      padding: 8px 20px; border-radius: 100px; font-size: 14px; font-weight: 500;
+      border: 1px solid var(--accent); background: none; color: var(--accent); min-height: 44px;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .tog-btn.active { background: var(--accent); color: #fff; }
+
+    .chart-wrap {
+      background: var(--bg-card); border: 1px solid var(--bg-card-border);
+      border-radius: 14px; padding: 16px; margin-bottom: 16px;
+      overflow-x: auto; -webkit-overflow-scrolling: touch;
+    }
+    .chart-inner {
+      display: flex; align-items: flex-end; gap: 6px; position: relative;
+      min-height: 210px; padding-bottom: 34px; padding-top: 4px;
+    }
+    .chart-col {
+      display: flex; flex-direction: column; align-items: center;
+      min-width: 36px; flex-shrink: 0;
+    }
+    .chart-bar {
+      width: 28px; border-radius: 4px 4px 0 0; min-height: 2px;
+      transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .chart-bar.empty-bar {
+      border: 1px dashed var(--text-muted); opacity: 0.3; background: none !important;
+    }
+    .chart-day { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+    .chart-dur { font-size: 10px; color: var(--text-muted); }
+    .goal-line {
+      position: absolute; left: 0; right: 0;
+      border-top: 1px dashed var(--text-muted); opacity: 0.4; pointer-events: none;
+    }
+    .goal-label {
+      position: absolute; right: 4px; font-size: 10px;
+      color: var(--text-muted); opacity: 0.6; transform: translateY(-14px);
+    }
+
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+    .insight-card {
+      background: var(--bg-card); border: 1px solid var(--bg-card-border);
+      border-radius: 14px; padding: 16px;
+    }
+    .insight-title {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 14px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 10px;
+    }
+    .insight-title svg { width: 16px; height: 16px; }
+    .insight-text { font-size: 14px; line-height: 1.5; }
+    .trends-empty { text-align: center; color: var(--text-muted); padding: 40px 20px; font-size: 15px; }
+
+    /* 8. Learn tab */
+    .learn-section { margin-bottom: 28px; }
+    .learn-section h2 { font-size: 18px; font-weight: 700; margin: 0 0 12px 0; }
+    .learn-section p { font-size: 14px; line-height: 1.6; margin: 0 0 12px 0; opacity: 0.9; }
+    .compare-cards { display: flex; gap: 10px; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
+    .compare-card {
+      flex-shrink: 0; background: var(--bg-card); border: 1px solid var(--bg-card-border);
+      border-radius: 14px; padding: 14px 18px; text-align: center; min-width: 130px;
+    }
+    .compare-name { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+    .compare-price { font-size: 13px; color: var(--text-muted); }
+    .standout { font-size: 16px; font-weight: 700; color: var(--accent); margin-top: 16px; text-align: center; }
+    .steps-list { display: flex; flex-direction: column; gap: 16px; }
+    .step-item { display: flex; align-items: center; gap: 12px; }
+    .step-icon {
+      width: 36px; height: 36px; border-radius: 50%; background: var(--bg-card);
+      border: 1px solid var(--bg-card-border); display: flex; align-items: center;
+      justify-content: center; font-size: 18px; flex-shrink: 0;
+    }
+    .step-text { font-size: 14px; }
+    .step-text strong { font-weight: 600; }
+    .sources p { font-size: 12px; color: var(--text-muted); line-height: 1.7; margin: 0 0 8px 0; }
+
+    /* 9. Modals */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+      z-index: 200; display: none; align-items: flex-end; justify-content: center;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal-sheet {
+      background: var(--bg-card); border-radius: 20px 20px 0 0;
+      width: 100%; max-width: 430px; max-height: 85vh; overflow-y: auto;
+      padding: 24px 20px calc(24px + env(safe-area-inset-bottom, 0px));
+      transform: translateY(100%);
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .modal-overlay.show .modal-sheet { transform: translateY(0); }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .modal-title { font-size: 18px; font-weight: 700; }
+    .modal-close {
+      background: none; border: none; color: var(--text-muted); font-size: 24px;
+      padding: 8px; min-width: 44px; min-height: 44px;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .form-group { margin-bottom: 16px; }
+    .form-label { font-size: 13px; font-weight: 500; color: var(--text-muted); margin-bottom: 8px; display: block; }
+    .form-row { display: flex; gap: 10px; }
+    .form-row input {
+      flex: 1; background: var(--bg-deep); border: 1px solid var(--bg-card-border);
+      border-radius: 10px; color: var(--text-primary); padding: 12px; font-size: 15px; min-height: 44px;
+    }
+    .form-error { color: var(--danger); font-size: 13px; margin-top: 6px; display: none; }
+
+    .btn-primary {
+      width: 100%; background: var(--accent); color: #fff; border: none;
+      border-radius: 10px; padding: 14px; font-size: 16px; font-weight: 600; min-height: 44px;
+      transition: opacity 0.2s;
+    }
+    .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-secondary {
+      width: 100%; background: none; border: 1px solid var(--bg-card-border);
+      color: var(--text-primary); border-radius: 10px; padding: 14px;
+      font-size: 16px; font-weight: 500; min-height: 44px; margin-top: 10px;
+    }
+    .btn-danger-outline {
+      width: 100%; background: none; border: 1px solid var(--danger); color: var(--danger);
+      border-radius: 10px; padding: 14px; font-size: 16px; font-weight: 500; min-height: 44px;
+    }
+
+    .goal-display { font-size: 24px; font-weight: 700; text-align: center; margin-bottom: 12px; }
+    .goal-slider {
+      width: 100%; -webkit-appearance: none; appearance: none;
+      height: 6px; border-radius: 3px; background: var(--bg-deep); outline: none;
+    }
+    .goal-slider::-webkit-slider-thumb {
+      -webkit-appearance: none; appearance: none; width: 28px; height: 28px;
+      border-radius: 50%; background: var(--accent); cursor: pointer;
+    }
+    .settings-divider { border: none; border-top: 1px solid var(--bg-card-border); margin: 20px 0; }
+    .settings-credit { text-align: center; font-size: 12px; color: var(--text-muted); margin-top: 24px; }
+
+    .confirm-box { background: var(--bg-deep); border-radius: 14px; padding: 20px; text-align: center; display: none; }
+    .confirm-box.show { display: block; }
+    .confirm-text { font-size: 15px; margin-bottom: 16px; }
+    .confirm-actions { display: flex; gap: 10px; }
+    .confirm-actions button { flex: 1; }
+
+    .results-content { text-align: center; }
+    .results-duration { font-size: 32px; font-weight: 700; margin: 8px 0; }
+    .results-debt { font-size: 16px; margin-bottom: 16px; }
+    .results-tip {
+      font-size: 14px; color: var(--text-muted); line-height: 1.5;
+      padding: 12px; background: var(--bg-deep); border-radius: 10px; margin-bottom: 20px;
+    }
+
+    /* 10. Utilities */
+    .color-good { color: var(--good); }
+    .color-warn { color: var(--warn); }
+    .color-danger { color: var(--danger); }
+    .hidden { display: none !important; }
+
+    /* 11. @keyframes */
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 0 0 var(--accent-glow); }
+      50% { box-shadow: 0 0 40px 10px var(--accent-glow); }
+    }
+    @keyframes pulse-glow-wake {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(52,211,153,0.25); }
+      50% { box-shadow: 0 0 40px 10px rgba(52,211,153,0.25); }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <!-- Tab 1: Track -->
+    <div id="tab-track" class="tab-content active">
+      <div class="app-header">
+        <div class="app-title">Slync</div>
+        <button class="gear-btn" onclick="openSettings()">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.14 12.94c.04-.31.06-.63.06-.94s-.02-.63-.06-.94l2.03-1.58a.49.49 0 00.12-.61l-1.92-3.32a.49.49 0 00-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.48.48 0 00-.48-.41h-3.84a.48.48 0 00-.48.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.49.49 0 00-.59.22L2.74 8.87a.48.48 0 00.12.61l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58a.49.49 0 00-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.26.41.48.41h3.84c.24 0 .44-.17.48-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6A3.6 3.6 0 1112 8.4a3.6 3.6 0 010 7.2z"/></svg>
+        </button>
+      </div>
+
+      <!-- State A: Snapshot -->
+      <div id="snapshot-card" class="card">
+        <div class="snapshot-row">
+          <div class="snapshot-item">
+            <div class="snapshot-label">Last night</div>
+            <div class="snapshot-value" id="snap-last">No data yet</div>
+          </div>
+          <div class="snapshot-item" style="text-align:right">
+            <div class="snapshot-label">This week</div>
+            <div class="snapshot-value" id="snap-week">—</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- State B: Session -->
+      <div id="session-card" class="card hidden">
+        <div class="session-info">
+          <div class="fell-asleep" id="fell-asleep-text"></div>
+          <div class="elapsed" id="elapsed-text"></div>
+        </div>
+      </div>
+
+      <div class="hero-wrap">
+        <button class="hero-btn" id="hero-btn" onclick="toggleSleep()">
+          <svg id="hero-icon-moon" viewBox="0 0 24 24" fill="white"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          <svg id="hero-icon-sun" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" class="hidden"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+          <span class="btn-label" id="hero-label">Start Sleep</span>
+        </button>
+      </div>
+
+      <div class="live-clock" id="live-clock"></div>
+
+      <div class="manual-link" id="manual-link" onclick="openManual()">+ Add entry manually</div>
+
+      <div id="tips-card" class="card tips-card">
+        <div class="card-heading">Tonight's Tips</div>
+        <div id="tips-list"></div>
+      </div>
+    </div>
+
+    <!-- Tab 2: Log -->
+    <div id="tab-log" class="tab-content">
+      <div class="page-title">Sleep Log</div>
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-label">7-Day Avg</div>
+          <div class="stat-value" id="log-avg">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">7-Day Debt</div>
+          <div class="stat-value" id="log-debt">—</div>
+        </div>
+      </div>
+      <div id="log-list"></div>
+    </div>
+
+    <!-- Tab 3: Trends -->
+    <div id="tab-trends" class="tab-content">
+      <div class="page-title">Trends</div>
+      <div class="time-toggle">
+        <button class="tog-btn active" onclick="setRange(7)" id="tog-7">7 Days</button>
+        <button class="tog-btn" onclick="setRange(30)" id="tog-30">30 Days</button>
+      </div>
+      <div id="trends-content"></div>
+    </div>
+
+    <!-- Tab 4: Learn -->
+    <div id="tab-learn" class="tab-content">
+      <div class="page-title">Learn</div>
+
+      <div class="learn-section">
+        <h2>Why Sleep Matters</h2>
+        <p>70% of high school and college students don't get enough sleep. Only about 1 in 4 high school students gets the recommended 8–10 hours on a school night.</p>
+        <p>Sleep deprivation directly impacts grades, athletic performance, mental health, and physical health.</p>
+        <p>Chronic sleep deprivation increases risk of obesity, diabetes, cardiovascular disease, and weakened immune system.</p>
+      </div>
+
+      <div class="learn-section">
+        <h2>Sleep Tracking Shouldn't Cost $300</h2>
+        <div class="compare-cards">
+          <div class="compare-card">
+            <div class="compare-name">Oura Ring</div>
+            <div class="compare-price">$300–$500</div>
+          </div>
+          <div class="compare-card">
+            <div class="compare-name">WHOOP</div>
+            <div class="compare-price">$30/mo + $239</div>
+          </div>
+          <div class="compare-card">
+            <div class="compare-name">Apple Watch</div>
+            <div class="compare-price">$399–$799</div>
+          </div>
+        </div>
+        <div class="standout">Slync is free. No hardware. No subscriptions. Two taps.</div>
+      </div>
+
+      <div class="learn-section">
+        <h2>How It Works</h2>
+        <div class="steps-list">
+          <div class="step-item">
+            <div class="step-icon">🌙</div>
+            <div class="step-text">Tap <strong>Start Sleep</strong> when you go to bed</div>
+          </div>
+          <div class="step-item">
+            <div class="step-icon">☀️</div>
+            <div class="step-text">Tap <strong>Wake Up</strong> when you get up</div>
+          </div>
+          <div class="step-item">
+            <div class="step-icon">📊</div>
+            <div class="step-text">See your trends, debt, and tips</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="learn-section sources">
+        <h2>Sources</h2>
+        <p>Centers for Disease Control and Prevention. (2018). "Sleep in Middle and High School Students." CDC Healthy Schools.</p>
+        <p>Curcio, G., Ferrara, M., &amp; De Gennaro, L. (2006). "Sleep loss, learning capacity and academic performance." <em>Sleep Medicine Reviews</em>, 10(5), 323–337.</p>
+        <p>National Heart, Lung, and Blood Institute. "Sleep Deprivation and Deficiency."</p>
+      </div>
+    </div>
+
+    <!-- Tab Bar -->
+    <nav id="tab-bar">
+      <button class="tab-btn active" data-tab="track">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        <span>Track</span>
+      </button>
+      <button class="tab-btn" data-tab="log">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+        <span>Log</span>
+      </button>
+      <button class="tab-btn" data-tab="trends">
+        <svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="12" width="5" height="9" rx="1"/><rect x="10" y="7" width="5" height="14" rx="1"/><rect x="17" y="10" width="5" height="11" rx="1"/></svg>
+        <span>Trends</span>
+      </button>
+      <button class="tab-btn" data-tab="learn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 18h6M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/></svg>
+        <span>Learn</span>
+      </button>
+    </nav>
+
+    <!-- Settings Modal -->
+    <div class="modal-overlay" id="modal-settings" onclick="closeSettingsBackdrop(event)">
+      <div class="modal-sheet">
+        <div class="modal-header">
+          <div class="modal-title">Settings</div>
+          <button class="modal-close" onclick="closeSettings()">&times;</button>
+        </div>
+        <div class="form-group">
+          <div class="form-label">Daily Sleep Goal</div>
+          <div class="goal-display" id="goal-display">8 hours</div>
+          <input type="range" class="goal-slider" id="goal-slider" min="6" max="10" step="0.5" value="8" oninput="updateGoal(this.value)">
+        </div>
+        <hr class="settings-divider">
+        <div id="clear-section">
+          <button class="btn-danger-outline" onclick="showClearConfirm()">Clear All Data</button>
+        </div>
+        <div class="confirm-box" id="clear-confirm">
+          <div class="confirm-text">Delete all sleep history?</div>
+          <div class="confirm-actions">
+            <button class="cbtn-del" onclick="clearAllData()">Delete Everything</button>
+            <button class="cbtn-keep" onclick="hideClearConfirm()">Cancel</button>
+          </div>
+        </div>
+        <div class="settings-credit">Slync v1.0 · Built by George</div>
+      </div>
+    </div>
+
+    <!-- Manual Entry Modal -->
+    <div class="modal-overlay" id="modal-manual" onclick="closeManualBackdrop(event)">
+      <div class="modal-sheet">
+        <div class="modal-header">
+          <div class="modal-title">Add Sleep Entry</div>
+          <button class="modal-close" onclick="closeManual()">&times;</button>
+        </div>
+        <div class="form-group">
+          <div class="form-label">Bedtime</div>
+          <div class="form-row">
+            <input type="date" id="m-sleep-date">
+            <input type="time" id="m-sleep-time" value="22:00">
+          </div>
+        </div>
+        <div class="form-group">
+          <div class="form-label">Wake time</div>
+          <div class="form-row">
+            <input type="date" id="m-wake-date">
+            <input type="time" id="m-wake-time" value="06:00">
+          </div>
+        </div>
+        <div class="form-error" id="manual-error">Wake time must be after bedtime.</div>
+        <button class="btn-primary" id="manual-save" onclick="saveManual()">Save Entry</button>
+        <button class="btn-secondary" onclick="closeManual()">Cancel</button>
+      </div>
+    </div>
+
+    <!-- Results Overlay -->
+    <div class="modal-overlay" id="modal-results">
+      <div class="modal-sheet">
+        <div class="results-content" id="results-content"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 1. Data: load/save/defaults
+    const STORAGE_KEY = 'slync_data';
+
+    function getDefaults() {
+      return { sleepGoalHours: 8, entries: [], currentSession: null };
+    }
+
+    function loadData() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed && Array.isArray(parsed.entries)) return parsed;
+        }
+      } catch (e) {}
+      return getDefaults();
+    }
+
+    function saveData() {
+      if (data.entries.length > 90) data.entries = data.entries.slice(0, 90);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+
+    let data = loadData();
+
+    // 2. DOM references
+    const $ = id => document.getElementById(id);
+
+    // 3. Tab navigation
+    let currentTab = 'track';
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const tabContents = document.querySelectorAll('.tab-content');
+
+    tabBtns.forEach(btn => {
+      btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+    });
+
+    function switchTab(tab) {
+      currentTab = tab;
+      tabBtns.forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+      tabContents.forEach(tc => tc.classList.toggle('active', tc.id === 'tab-' + tab));
+      if (tab === 'track') { renderTrack(); randomizeTips(); }
+      if (tab === 'log') renderLog();
+      if (tab === 'trends') renderTrends();
+    }
+
+    // 4. Track tab logic
+    let elapsedInterval = null;
+
+    function renderTrack() {
+      const sleeping = data.currentSession !== null;
+
+      $('snapshot-card').classList.toggle('hidden', sleeping);
+      $('session-card').classList.toggle('hidden', !sleeping);
+      $('tips-card').classList.toggle('hidden', sleeping);
+
+      const btn = $('hero-btn');
+      const moonIcon = $('hero-icon-moon');
+      const sunIcon = $('hero-icon-sun');
+      const label = $('hero-label');
+
+      if (sleeping) {
+        btn.classList.add('wake');
+        moonIcon.classList.add('hidden');
+        sunIcon.classList.remove('hidden');
+        label.textContent = 'Wake Up';
+
+        const st = new Date(data.currentSession.sleepTime);
+        $('fell-asleep-text').textContent = 'Fell asleep at ' + formatTime(st);
+        updateElapsed();
+        clearInterval(elapsedInterval);
+        elapsedInterval = setInterval(updateElapsed, 60000);
+      } else {
+        btn.classList.remove('wake');
+        moonIcon.classList.remove('hidden');
+        sunIcon.classList.add('hidden');
+        label.textContent = 'Start Sleep';
+        clearInterval(elapsedInterval);
+
+        // Snapshot
+        if (data.entries.length > 0) {
+          $('snap-last').textContent = fmt(data.entries[0].durationHours);
+        } else {
+          $('snap-last').textContent = 'No data yet';
+        }
+
+        const weekDebt = getDebt(7);
+        if (data.entries.length === 0) {
+          $('snap-week').textContent = '—';
+          $('snap-week').className = 'snapshot-value';
+        } else {
+          const sign = weekDebt >= 0 ? '+' : '';
+          $('snap-week').textContent = sign + fmt(weekDebt);
+          $('snap-week').className = 'snapshot-value ' + debtColorClass(weekDebt);
+        }
+      }
+    }
+
+    function updateElapsed() {
+      if (!data.currentSession) return;
+      const ms = Date.now() - new Date(data.currentSession.sleepTime).getTime();
+      const hrs = ms / 3600000;
+      $('elapsed-text').textContent = 'Sleeping for ' + fmt(hrs);
+    }
+
+    function toggleSleep() {
+      if (data.currentSession) {
+        wakeUp();
+      } else {
+        startSleep();
+      }
+    }
+
+    function startSleep() {
+      data.currentSession = { sleepTime: new Date().toISOString(), active: true };
+      saveData();
+      renderTrack();
+    }
+
+    function wakeUp() {
+      const wakeTime = new Date().toISOString();
+      const sleepTime = data.currentSession.sleepTime;
+      const durationHours = Math.round(((new Date(wakeTime) - new Date(sleepTime)) / 3600000) * 100) / 100;
+      const debtHours = Math.round((durationHours - data.sleepGoalHours) * 100) / 100;
+      const id = Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+      const entry = { id, sleepTime, wakeTime, durationHours, debtHours, method: 'tap' };
+      data.entries.unshift(entry);
+      data.currentSession = null;
+      saveData();
+      showResults(entry);
+      renderTrack();
+    }
+
+    // 5. Manual entry
+    function openManual() {
+      const today = new Date();
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+      $('m-sleep-date').value = dateStr(yesterday);
+      $('m-wake-date').value = dateStr(today);
+      $('m-sleep-time').value = '22:00';
+      $('m-wake-time').value = '06:00';
+      $('manual-error').style.display = 'none';
+      $('manual-save').disabled = false;
+      $('modal-manual').classList.add('show');
+    }
+
+    function closeManual() { $('modal-manual').classList.remove('show'); }
+    function closeManualBackdrop(e) { if (e.target === $('modal-manual')) closeManual(); }
+
+    function saveManual() {
+      const sleepDt = new Date($('m-sleep-date').value + 'T' + $('m-sleep-time').value);
+      const wakeDt = new Date($('m-wake-date').value + 'T' + $('m-wake-time').value);
+
+      if (isNaN(sleepDt.getTime()) || isNaN(wakeDt.getTime()) || wakeDt <= sleepDt) {
+        $('manual-error').style.display = 'block';
+        return;
+      }
+
+      const sleepTime = sleepDt.toISOString();
+      const wakeTime = wakeDt.toISOString();
+      const durationHours = Math.round(((wakeDt - sleepDt) / 3600000) * 100) / 100;
+      const debtHours = Math.round((durationHours - data.sleepGoalHours) * 100) / 100;
+      const id = Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+      data.entries.unshift({ id, sleepTime, wakeTime, durationHours, debtHours, method: 'manual' });
+      data.entries.sort((a, b) => new Date(b.wakeTime) - new Date(a.wakeTime));
+      saveData();
+      closeManual();
+      renderTrack();
+    }
+
+    // 6. Settings
+    function openSettings() {
+      $('goal-slider').value = data.sleepGoalHours;
+      $('goal-display').textContent = data.sleepGoalHours + ' hours';
+      hideClearConfirm();
+      $('modal-settings').classList.add('show');
+    }
+    function closeSettings() { $('modal-settings').classList.remove('show'); }
+    function closeSettingsBackdrop(e) { if (e.target === $('modal-settings')) closeSettings(); }
+
+    function updateGoal(val) {
+      data.sleepGoalHours = parseFloat(val);
+      $('goal-display').textContent = val + ' hours';
+      saveData();
+    }
+
+    function showClearConfirm() {
+      $('clear-section').style.display = 'none';
+      $('clear-confirm').classList.add('show');
+    }
+    function hideClearConfirm() {
+      $('clear-section').style.display = 'block';
+      $('clear-confirm').classList.remove('show');
+    }
+    function clearAllData() {
+      localStorage.removeItem(STORAGE_KEY);
+      data = getDefaults();
+      closeSettings();
+      renderTrack();
+    }
+
+    // Results overlay
+    let resultsTimeout = null;
+    function showResults(entry) {
+      const weekDebt = getDebt(7);
+      const tip = getTipForDebt(weekDebt);
+      const debtAbs = Math.abs(entry.debtHours);
+      let debtLine, debtClass;
+      if (entry.debtHours >= 0) {
+        debtLine = fmt(debtAbs) + ' over your goal';
+        debtClass = 'color-good';
+      } else {
+        debtLine = fmt(debtAbs) + ' under your goal';
+        debtClass = 'color-warn';
+      }
+
+      $('results-content').innerHTML =
+        '<div style="font-size:15px;color:var(--text-muted);margin-bottom:4px">You slept</div>' +
+        '<div class="results-duration">' + fmt(entry.durationHours) + '</div>' +
+        '<div class="results-debt ' + debtClass + '">' + debtLine + '</div>' +
+        '<div class="results-tip">' + tip + '</div>' +
+        '<button class="btn-primary" onclick="closeResults()">Got it</button>';
+
+      $('modal-results').classList.add('show');
+      clearTimeout(resultsTimeout);
+      resultsTimeout = setTimeout(closeResults, 5000);
+    }
+    function closeResults() {
+      clearTimeout(resultsTimeout);
+      $('modal-results').classList.remove('show');
+    }
+
+    // 7. Log tab rendering
+    function renderLog() {
+      const recent7 = getRecent(7);
+      if (recent7.length > 0) {
+        const avg = recent7.reduce((s, e) => s + e.durationHours, 0) / recent7.length;
+        $('log-avg').textContent = fmt(avg);
+        const debt = recent7.reduce((s, e) => s + e.debtHours, 0);
+        const sign = debt >= 0 ? '+' : '';
+        $('log-debt').textContent = sign + fmt(debt);
+        $('log-debt').className = 'stat-value ' + debtColorClass(debt);
+      } else {
+        $('log-avg').textContent = '—';
+        $('log-debt').textContent = '—';
+        $('log-debt').className = 'stat-value';
+      }
+
+      const list = $('log-list');
+      if (data.entries.length === 0) {
+        list.innerHTML =
+          '<div class="empty-state">' +
+            '<div class="empty-moon"></div>' +
+            '<div class="empty-text">No sleep data yet</div>' +
+            '<div class="empty-sub">Start tracking on the Track tab.</div>' +
+          '</div>';
+        return;
+      }
+
+      let html = '';
+      data.entries.forEach(e => {
+        const st = new Date(e.sleepTime);
+        const wt = new Date(e.wakeTime);
+        const dSign = e.debtHours >= 0 ? '+' : '-';
+        const dClass = e.debtHours >= 0 ? 'debt-good' : (e.debtHours >= -1 ? 'debt-warn' : 'debt-danger');
+        const manualBadge = e.method === 'manual' ? '<span class="entry-manual-badge">✏</span>' : '';
+
+        html += '<div class="entry-card" id="entry-' + e.id + '">' +
+          '<div class="entry-normal">' +
+            '<div class="entry-left">' +
+              '<div class="entry-date">' + formatShortDate(st) + manualBadge + '</div>' +
+              '<div class="entry-times">' + formatTime(st) + ' → ' + formatTime(wt) + '</div>' +
+            '</div>' +
+            '<div class="entry-right">' +
+              '<div class="entry-stats">' +
+                '<div class="entry-duration">' + fmt(e.durationHours) + '</div>' +
+                '<span class="debt-pill ' + dClass + '">' + dSign + fmtShort(e.debtHours) + '</span>' +
+              '</div>' +
+              '<button class="del-btn" onclick="confirmDel(\'' + e.id + '\')">' +
+                '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m1 0l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>' +
+              '</button>' +
+            '</div>' +
+          '</div>' +
+          '<div class="entry-confirm hidden">' +
+            '<span>Delete this entry?</span>' +
+            '<button class="cbtn-del" onclick="deleteEntry(\'' + e.id + '\')">Delete</button>' +
+            '<button class="cbtn-keep" onclick="cancelDel(\'' + e.id + '\')">Keep</button>' +
+          '</div>' +
+        '</div>';
+      });
+      list.innerHTML = html;
+    }
+
+    function confirmDel(id) {
+      const card = $('entry-' + id);
+      card.querySelector('.entry-normal').classList.add('hidden');
+      card.querySelector('.entry-confirm').classList.remove('hidden');
+    }
+    function cancelDel(id) {
+      const card = $('entry-' + id);
+      card.querySelector('.entry-normal').classList.remove('hidden');
+      card.querySelector('.entry-confirm').classList.add('hidden');
+    }
+    function deleteEntry(id) {
+      data.entries = data.entries.filter(e => e.id !== id);
+      saveData();
+      renderLog();
+    }
+
+    // 8. Trends tab
+    let trendRange = 7;
+    function setRange(days) {
+      trendRange = days;
+      $('tog-7').classList.toggle('active', days === 7);
+      $('tog-30').classList.toggle('active', days === 30);
+      renderTrends();
+    }
+
+    function renderTrends() {
+      const days = trendRange;
+      const recent = getRecent(days);
+      const container = $('trends-content');
+
+      if (recent.length < 2) {
+        container.innerHTML = '<div class="trends-empty">Log a few more nights to see trends.</div>';
+        return;
+      }
+
+      // Build day map: date string → entry
+      const dayMap = {};
+      recent.forEach(e => {
+        const key = dateStr(new Date(e.wakeTime));
+        if (!dayMap[key]) dayMap[key] = e;
+      });
+
+      // Generate day list
+      const dayList = [];
+      for (let i = days - 1; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        dayList.push(dateStr(d));
+      }
+
+      const maxBarH = 160;
+      const goalBottom = (data.sleepGoalHours / 12) * maxBarH + 34;
+
+      let barsHtml = '<div class="goal-line" style="bottom:' + goalBottom + 'px"><span class="goal-label">' + data.sleepGoalHours + 'h goal</span></div>';
+
+      dayList.forEach(dayKey => {
+        const e = dayMap[dayKey];
+        const d = new Date(dayKey + 'T12:00:00');
+        const dayAbbr = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()];
+        if (e) {
+          const h = Math.min((e.durationHours / 12) * maxBarH, maxBarH);
+          let color;
+          if (e.durationHours >= data.sleepGoalHours) color = 'var(--good)';
+          else if (e.durationHours >= data.sleepGoalHours - 1) color = 'var(--warn)';
+          else color = 'var(--danger)';
+          barsHtml += '<div class="chart-col">' +
+            '<div class="chart-bar" style="height:' + h + 'px;background:' + color + '"></div>' +
+            '<div class="chart-day">' + dayAbbr + '</div>' +
+            '<div class="chart-dur">' + fmt(e.durationHours) + '</div></div>';
+        } else {
+          barsHtml += '<div class="chart-col">' +
+            '<div class="chart-bar empty-bar" style="height:30px"></div>' +
+            '<div class="chart-day">' + dayAbbr + '</div>' +
+            '<div class="chart-dur"></div></div>';
+        }
+      });
+
+      let chartHtml = '<div class="chart-wrap"><div class="chart-inner">' + barsHtml + '</div></div>';
+
+      // Stats grid
+      const avg = recent.reduce((s, e) => s + e.durationHours, 0) / recent.length;
+      const totalDebt = recent.reduce((s, e) => s + e.debtHours, 0);
+      const best = recent.reduce((a, b) => a.durationHours > b.durationHours ? a : b);
+      const worst = recent.reduce((a, b) => a.durationHours < b.durationHours ? a : b);
+      const debtSign = totalDebt >= 0 ? '+' : '';
+
+      chartHtml += '<div class="stats-grid">' +
+        statCard('Avg Sleep', fmt(avg)) +
+        statCard('Total Debt', debtSign + fmt(totalDebt), debtColorClass(totalDebt)) +
+        statCard('Best Night', fmt(best.durationHours), '', formatShortDate(new Date(best.wakeTime))) +
+        statCard('Worst Night', fmt(worst.durationHours), '', formatShortDate(new Date(worst.wakeTime))) +
+      '</div>';
+
+      // Insight
+      const insight = getInsight(recent, days);
+      chartHtml += '<div class="insight-card">' +
+        '<div class="insight-title">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 18h6M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/></svg>' +
+          'Insight</div>' +
+        '<div class="insight-text">' + insight + '</div>' +
+      '</div>';
+
+      container.innerHTML = chartHtml;
+    }
+
+    function statCard(label, value, colorClass, sub) {
+      return '<div class="stat-card"><div class="stat-label">' + label + '</div>' +
+        '<div class="stat-value ' + (colorClass || '') + '">' + value + '</div>' +
+        (sub ? '<div style="font-size:11px;color:var(--text-muted);margin-top:2px">' + sub + '</div>' : '') +
+        '</div>';
+    }
+
+    function getInsight(entries, days) {
+      const goal = data.sleepGoalHours;
+      const avg = entries.reduce((s, e) => s + e.durationHours, 0) / entries.length;
+      const totalDebt = entries.reduce((s, e) => s + e.debtHours, 0);
+      const avgFmt = fmt(avg);
+
+      if (entries.length < 3)
+        return 'Keep logging! After a few more nights, Slync will show you patterns.';
+
+      if (avg < goal - 1.5)
+        return 'You\'re averaging ' + avgFmt + ' per night — well below your ' + goal + 'h goal. Try going to bed just 20 minutes earlier tonight.';
+
+      if (avg < goal - 0.5)
+        return 'You\'re close but not quite there at ' + avgFmt + ' per night. Try keeping screens away in your last hour before bed.';
+
+      // Bedtime stddev
+      const bedMins = entries.map(e => {
+        const d = new Date(e.sleepTime);
+        let m = d.getHours() * 60 + d.getMinutes();
+        if (d.getHours() < 18) m += 1440;
+        return m;
+      });
+      const meanBed = bedMins.reduce((a, b) => a + b, 0) / bedMins.length;
+      const stddev = Math.sqrt(bedMins.reduce((s, v) => s + (v - meanBed) ** 2, 0) / bedMins.length);
+      if (stddev > 90)
+        return 'Your bedtimes vary a lot. Try picking a consistent time and staying within 30 minutes of it each night.';
+
+      // Weekend vs weekday
+      const weekday = entries.filter(e => { const d = new Date(e.wakeTime).getDay(); return d >= 1 && d <= 5; });
+      const weekend = entries.filter(e => { const d = new Date(e.wakeTime).getDay(); return d === 0 || d === 6; });
+      if (weekend.length > 0 && weekday.length > 0) {
+        const wkdayAvg = weekday.reduce((s, e) => s + e.durationHours, 0) / weekday.length;
+        const wkendAvg = weekend.reduce((s, e) => s + e.durationHours, 0) / weekend.length;
+        if (wkendAvg > wkdayAvg + 1.5)
+          return 'You\'re sleeping much more on weekends — a sign of weekday debt. Try gradually shifting your weekday bedtime earlier.';
+      }
+
+      if (totalDebt >= 0)
+        return 'You\'re hitting your sleep goal. Consistency is everything — keep it up.';
+
+      return 'Tip: Most people need 7–9 hours. Experiment with your sleep goal in Settings to find your sweet spot.';
+    }
+
+    // 9. Tips system
+    const tips = {
+      tier1: [
+        "You're on track — keep your sleep schedule consistent, even on weekends.",
+        "Great streak. Consistency matters more than one perfect night.",
+        "Solid sleep. Keep your bedroom cool and dark for even better quality.",
+        "Hitting your goal. Wind down 30 minutes before bed to maintain this.",
+        "On target. Keeping screens out of the bedroom helps protect sleep quality."
+      ],
+      tier2: [
+        "Slightly behind. Going to bed just 15 minutes earlier tonight helps.",
+        "Mild debt adds up quietly. Try dimming lights an hour before bed.",
+        "A bit under your goal. Cut caffeine after 2 PM to fall asleep faster.",
+        "Close to target. Put your phone on Do Not Disturb 30 minutes before bed.",
+        "Almost there. A short wind-down — stretching, reading, deep breaths — adds sleep quality.",
+        "Try keeping bedtime within a 30-minute window each night."
+      ],
+      tier3: [
+        "Significant debt this week. Prioritize an extra hour tonight — it makes a real difference.",
+        "Your body needs more rest. Try getting to bed right after finishing your work tonight.",
+        "This much debt affects memory, mood, and reaction time. Make sleep the priority tonight.",
+        "Well below your goal. Avoid screens for 1 hour before bed — blue light suppresses melatonin.",
+        "Catch-up sleep helps, but consistency is better. Add 30 minutes each night this week.",
+        "At this level, focus and athletic performance suffer. Choose sleep over one more episode."
+      ],
+      tier4: [
+        "Serious debt. This impacts your immune system, grades, and mood. Get to bed as early as possible.",
+        "Your body needs recovery. Aim for 9+ hours tonight and keep a consistent schedule this week.",
+        "Severe debt can't be fixed in one night, but it starts with one better night. Commit to your full goal.",
+        "At this level, short naps help — keep them under 20 minutes and before 3 PM.",
+        "High debt. Remove distractions from your bedroom and commit to a full night. You'll feel the difference."
+      ]
+    };
+
+    function randomizeTips() {
+      const all = [...tips.tier1, ...tips.tier2, ...tips.tier3, ...tips.tier4];
+      const shuffled = all.sort(() => Math.random() - 0.5);
+      const picked = shuffled.slice(0, 3);
+      $('tips-list').innerHTML = picked.map((t, i) => '<div class="tip-item">' + (i + 1) + '. ' + t + '</div>').join('');
+    }
+
+    function getTipForDebt(weekDebt) {
+      let tier;
+      if (weekDebt >= 0) tier = tips.tier1;
+      else if (weekDebt >= -3) tier = tips.tier2;
+      else if (weekDebt >= -7) tier = tips.tier3;
+      else tier = tips.tier4;
+      return tier[Math.floor(Math.random() * tier.length)];
+    }
+
+    // 10. Utility functions
+    function fmt(h) {
+      const abs = Math.abs(h);
+      const hrs = Math.floor(abs);
+      const mins = Math.round((abs % 1) * 60);
+      return (h < 0 ? '-' : '') + hrs + 'h ' + mins + 'm';
+    }
+
+    function fmtShort(h) {
+      const abs = Math.abs(h);
+      const hrs = Math.floor(abs);
+      const mins = Math.round((abs % 1) * 60);
+      if (hrs === 0) return mins + 'm';
+      return hrs + 'h ' + mins + 'm';
+    }
+
+    function formatTime(d) {
+      let h = d.getHours();
+      const m = d.getMinutes().toString().padStart(2, '0');
+      const ampm = h >= 12 ? 'PM' : 'AM';
+      h = h % 12 || 12;
+      return h + ':' + m + ' ' + ampm;
+    }
+
+    function formatShortDate(d) {
+      const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+      const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      return days[d.getDay()] + ', ' + months[d.getMonth()] + ' ' + d.getDate();
+    }
+
+    function formatClockDate(d) {
+      const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+      const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      return days[d.getDay()] + ', ' + months[d.getMonth()] + ' ' + d.getDate() + ' · ' + formatTime(d);
+    }
+
+    function dateStr(d) {
+      return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    }
+
+    function getRecent(days) {
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - days);
+      cutoff.setHours(0, 0, 0, 0);
+      return data.entries.filter(e => new Date(e.wakeTime) >= cutoff);
+    }
+
+    function getDebt(days) {
+      const recent = getRecent(days);
+      return recent.reduce((s, e) => s + e.debtHours, 0);
+    }
+
+    function debtColorClass(debt) {
+      if (debt >= 0) return 'color-good';
+      if (debt >= -3) return 'color-warn';
+      return 'color-danger';
+    }
+
+    // 11. Clock interval
+    function startClock() {
+      function tick() {
+        $('live-clock').textContent = formatClockDate(new Date());
+      }
+      tick();
+      setInterval(tick, 1000);
+    }
+
+    // 12. Init
+    renderTrack();
+    randomizeTips();
+    startClock();
+  </script>
+</body>
+</html>
