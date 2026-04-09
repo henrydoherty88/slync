@@ -6,22 +6,22 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Slync">
-  <meta name="theme-color" content="#0b1120">
+  <meta name="theme-color" content="#1a1410">
   <title>Slync</title>
   <style>
     /* 1. CSS variables (:root) */
     :root {
-      --bg-deep: #0b1120;
-      --bg-card: #141c2e;
-      --bg-card-border: rgba(255,255,255,0.07);
-      --accent: #7c8cf5;
-      --accent-glow: rgba(124,140,245,0.25);
-      --good: #4ade80;
-      --warn: #facc15;
-      --danger: #f87171;
-      --text-primary: #eef0f6;
-      --text-muted: #8891a5;
-      --wake-accent: #34d399;
+      --bg-deep: #1a1410;
+      --bg-card: #241e17;
+      --bg-card-border: rgba(255,255,255,0.08);
+      --accent: #d4915c;
+      --accent-glow: rgba(212,145,92,0.25);
+      --good: #5cb85c;
+      --warn: #d4915c;
+      --danger: #c0392b;
+      --text-primary: #faf5f0;
+      --text-muted: #a89a8c;
+      --wake-accent: #5cb85c;
     }
 
     /* 2. Reset + global */
@@ -66,7 +66,7 @@
       align-items: center;
       height: calc(60px + env(safe-area-inset-bottom, 0px));
       padding-bottom: env(safe-area-inset-bottom, 0px);
-      background: rgba(11, 17, 32, 0.85);
+      background: rgba(26, 20, 16, 0.88);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
       border-top: 1px solid var(--bg-card-border);
@@ -211,9 +211,9 @@
       display: inline-block;
       margin-top: 2px;
     }
-    .debt-good { background: rgba(74,222,128,0.15); color: var(--good); }
-    .debt-warn { background: rgba(250,204,21,0.15); color: var(--warn); }
-    .debt-danger { background: rgba(248,113,113,0.15); color: var(--danger); }
+    .debt-good { background: rgba(92,184,92,0.15); color: var(--good); }
+    .debt-warn { background: rgba(212,145,92,0.15); color: var(--warn); }
+    .debt-danger { background: rgba(192,57,43,0.15); color: var(--danger); }
     .del-btn {
       background: none; border: none; color: var(--text-muted); padding: 8px;
       min-width: 44px; min-height: 44px;
@@ -412,8 +412,8 @@
       50% { box-shadow: 0 0 40px 10px var(--accent-glow); }
     }
     @keyframes pulse-glow-wake {
-      0%, 100% { box-shadow: 0 0 0 0 rgba(52,211,153,0.25); }
-      50% { box-shadow: 0 0 40px 10px rgba(52,211,153,0.25); }
+      0%, 100% { box-shadow: 0 0 0 0 rgba(92,184,92,0.25); }
+      50% { box-shadow: 0 0 40px 10px rgba(92,184,92,0.25); }
     }
   </style>
 </head>
@@ -500,9 +500,11 @@
 
       <div class="learn-section">
         <h2>Why Sleep Matters</h2>
-        <p>70% of high school and college students don't get enough sleep. Only about 1 in 4 high school students gets the recommended 8–10 hours on a school night.</p>
-        <p>Sleep deprivation directly impacts grades, athletic performance, mental health, and physical health.</p>
-        <p>Chronic sleep deprivation increases risk of obesity, diabetes, cardiovascular disease, and weakened immune system.</p>
+        <p>Missing out on quality sleep does far more damage than just making you tired. Sleep is when your body does its most important maintenance work.</p>
+        <p>Your brain processes emotions and clears stress hormones, which is why chronic sleep loss raises your risk of depression and anxiety. Your metabolism regulates hunger hormones while you sleep, so without enough rest you crave more food and store more fat, increasing your risk of obesity and type 2 diabetes.</p>
+        <p>Your heart rate and blood pressure naturally dip during sleep, giving your cardiovascular system a chance to recover. Cut that short night after night, and you raise your long-term risk of high blood pressure and heart disease.</p>
+        <p>Sleep is also when your brain consolidates memories and flushes out waste products that build up throughout the day, which is why poor sleep leaves you foggy and unable to concentrate. Even your skin repairs itself while you sleep, meaning chronic deprivation can visibly accelerate aging.</p>
+        <p>The bottom line: sleep is not downtime. It is the foundation on which everything else is built.</p>
       </div>
 
       <div class="learn-section">
